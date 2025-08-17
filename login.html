@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OpsBoard — Sign in / Create account</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .tabs{display:flex;gap:6px;background:#1b1b1f;border:1px solid var(--line);border-radius:12px;padding:4px;max-width:360px;margin:0 auto 16px}
+    .tab{flex:1;border:0;background:transparent;color:var(--muted);padding:8px 10px;border-radius:10px;cursor:pointer}
+    .tab.active{background:var(--panel);color:#fff;font-weight:700}
+    .plan-select{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
+    .plan{border:1px solid var(--line);background:#1b1c20;color:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
+    .plan.active{outline:2px solid var(--accent-2)}
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="container inner">
+      <a class="brand" href="index.html"><span class="logo"></span><span>OpsBoard</span></a>
+      <div style="display:flex;gap:10px">
+        <a href="features.html" class="btn ghost">Features</a>
+        <a href="pricing.html" class="btn ghost">Pricing</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="section">
+    <div class="container">
+      <div class="card form">
+        <div class="center" style="margin-bottom:8px">
+          <div class="tabs">
+            <button id="tabSignIn" class="tab active">Sign in</button>
+            <button id="tabSignUp" class="tab">Create account</button>
+          </div>
+        </div>
+
+        <!-- Sign in -->
+        <div id="paneSignIn">
+          <h2 style="margin:0 0 8px">Welcome back</h2>
+          <p class="muted" style="margin:0 0 16px">Sign in with your email. We’ll send a magic link.</p>
+          <label class="muted" for="emailIn">Email</label>
+          <input id="emailIn" class="field" type="email" placeholder="you@example.com" />
+          <div style="display:flex;gap:10px;margin-top:14px">
+            <button class="btn" onclick="fake('signin')">Send magic link</button>
+            <a class="btn ghost" href="index.html">Back</a>
+          </div>
+          <p id="msgIn" class="muted" style="margin-top:12px"></p>
+        </div>
+
+        <!-- Sign up -->
+        <div id="paneSignUp" style="display:none">
+          <h2 style="margin:0 0 8px">Create your account</h2>
+          <p class="muted" style="margin:0 0 16px">Pick a plan to get started. You can change anytime.</p>
+
+          <label class="muted" for="emailUp">Email</label>
+          <input id="emailUp" class="field" type="email" placeholder="you@example.com" />
+
+          <div style="margin-top:12px">
+            <div class="muted">Plan</div>
+            <div class="plan-select">
+              <button class="plan" data-plan="free">Free</button>
+              <button class="plan" data-plan="pro">Pro</button>
+              <button class="plan" data-plan="team">Team</button>
+            </div>
+            <input id="planHidden" type="hidden" value="free" />
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:14px">
+            <button class="btn" onclick="fake('signup')">Create account</button>
+            <a class="btn ghost" href="pricing.html">See pricing</a>
+          </div>
+          <p id="msgUp" class="muted" style="margin-top:12px"></p>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:420px;margin:20px auto 0">
+        <h3 style="margin:0 0 6px">Why OpsBoard?</h3>
+        <p class="muted" style="margin:0 0 12px">One focus, three tasks, and the KPIs that matter. That’s it.</p>
+        <a href="features.html" class="btn ghost">See features</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container" style="display:flex;justify-content:space-between">
+      <div>© OpsBoard</div>
+      <div style="display:flex;gap:16px">
+        <a href="index.html">Home</a><a href="features.html">Features</a><a href="pricing.html">Pricing</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // tab logic
+    const tabIn = document.getElementById('tabSignIn');
+    const tabUp = document.getElementById('tabSignUp');
+    const paneIn = document.getElementById('paneSignIn');
+    const paneUp = document.getElementById('paneSignUp');
+    function setTab(mode){
+      const signUp = mode === 'signup';
+      tabIn.classList.toggle('active', !signUp);
+      tabUp.classList.toggle('active', signUp);
+      paneIn.style.display = signUp ? 'none' : 'block';
+      paneUp.style.display = signUp ? 'block' : 'none';
+    }
+    tabIn.onclick = ()=> setTab('signin');
+    tabUp.onclick = ()=> setTab('signup');
+
+    // plan preselect via query (?mode=signup&plan=pro)
+    const params = new URLSearchParams(location.search);
+    const defaultMode = params.get('mode') || 'signin';
+    const defaultPlan = (params.get('plan') || 'free').toLowerCase();
+    setTab(defaultMode);
+
+    const planButtons = Array.from(document.querySelectorAll('.plan'));
+    const hidden = document.getElementById('planHidden');
+    function selectPlan(val){
+      hidden.value = val;
+      planButtons.forEach(b => b.classList.toggle('active', b.dataset.plan === val));
+    }
+    planButtons.forEach(b => b.onclick = () => selectPlan(b.dataset.plan));
+    selectPlan(defaultPlan);
+
+    // fake handlers (wire to Supabase later)
+    function fake(kind){
+      if(kind==='signin'){
+        const email = (document.getElementById('emailIn') as HTMLInputElement).value;
+        const msg = document.getElementById('msgIn');
+        msg.textContent = email ? 'Magic link would be sent. (Wire Supabase later.)' : 'Please enter your email.';
+      }else{
+        const email = (document.getElementById('emailUp') as HTMLInputElement).value;
+        const msg = document.getElementById('msgUp');
+        const plan = hidden.value;
+        msg.textContent = email ? `We’d create your ${plan.toUpperCase()} account and redirect to checkout. (Wire later.)` : 'Please enter your email.';
+      }
+    }
+  </script>
+</body>
+</html>

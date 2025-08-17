@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpsBoard — Pricing</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="container inner">
+      <a class="brand" href="index.html"><span class="logo"></span><span>OpsBoard</span></a>
+      <div style="display:flex;gap:10px">
+        <a href="features.html" class="btn ghost">Features</a>
+        <a href="pricing.html" class="btn ghost">Pricing</a>
+        <a href="login.html" class="btn">Sign in</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="container center">
+      <span class="badge">Simple & fair</span>
+      <h1>Pick your pace</h1>
+      <p class="lead" style="max-width:680px;margin:0 auto">
+        Start free. Upgrade to Pro for unlimited history, email recaps, and exports.
+      </p>
+      <div class="switch" style="margin-top:14px">
+        <button id="mBtn" class="active">Monthly</button>
+        <button id="yBtn">Yearly <span class="badge" style="margin-left:6px">2 months free</span></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Pricing -->
+  <section class="section">
+    <div class="container grid cards-2">
+      <!-- Free -->
+      <div class="tier">
+        <h3>Free</h3>
+        <div class="price" data-monthly="$0" data-yearly="$0">$0</div>
+        <ul>
+          <li>• Today dashboard</li>
+          <li>• Top focus + 3 tasks</li>
+          <li>• Manual KPIs</li>
+          <li>• Local history (30 days)</li>
+        </ul>
+        <div style="margin-top:14px">
+          <a href="login.html?mode=signup&plan=free" class="btn ghost">Start for free</a>
+        </div>
+      </div>
+
+      <!-- Pro -->
+      <div class="tier" style="border-color:#3556ff; outline:2px solid rgba(76,118,255,.25)">
+        <div class="badge" style="margin-bottom:8px">Most popular</div>
+        <h3>Pro</h3>
+        <!-- set your actual price points here -->
+        <div class="price" data-monthly="$19" data-yearly="$190">$19</div>
+        <ul>
+          <li>• Everything in Free</li>
+          <li>• Unlimited history</li>
+          <li>• 8pm email recap</li>
+          <li>• CSV export</li>
+          <li>• Priority support</li>
+        </ul>
+        <div style="margin-top:14px">
+          <a href="login.html?mode=signup&plan=pro" class="btn">Upgrade to Pro</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section faq">
+    <div class="container">
+      <h2>FAQ</h2>
+      <!-- changed from "grid cards-2" to "faq-grid" -->
+      <div class="faq-grid">
+        <details class="card">
+          <summary>Can I use OpsBoard free forever?</summary>
+          <p>Yes. The Free plan includes the full daily ritual and 30 days of local history.</p>
+        </details>
+        <details class="card">
+          <summary>What do I get with Pro?</summary>
+          <p>Unlimited history, nightly email recaps, CSV export, and priority support.</p>
+        </details>
+        <details class="card">
+          <summary>Is there a yearly discount?</summary>
+          <p>Yes. Yearly Pro includes roughly two months free compared to monthly.</p>
+        </details>
+        <details class="card">
+          <summary>Can I cancel anytime?</summary>
+          <p>Absolutely. No contracts or hidden fees.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div>© OpsBoard</div>
+      <div style="display:flex;gap:16px">
+        <a href="index.html">Home</a>
+        <a href="features.html">Features</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toggle script -->
+  <script>
+    const mBtn = document.getElementById('mBtn');
+    const yBtn = document.getElementById('yBtn');
+    const prices = document.querySelectorAll('.price');
+    mBtn.onclick = () => {
+      mBtn.classList.add('active'); yBtn.classList.remove('active');
+      prices.forEach(p => p.textContent = p.getAttribute('data-monthly'));
+    };
+    yBtn.onclick = () => {
+      yBtn.classList.add('active'); mBtn.classList.remove('active');
+      prices.forEach(p => p.textContent = p.getAttribute('data-yearly'));
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+:root{
+  --bg:#0b0b0c; --panel:#141416; --panel-2:#0f0f11; --line:#232327;
+  --text:#f5f5f5; --muted:#a0a3a7; --accent:#6ea8ff; --accent-2:#4b7cf5; --ok:#20c997; --warn:#ffb020;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+a{color:inherit;text-decoration:none}
+.container{max-width:1100px;margin:0 auto;padding:0 20px}
+.btn{display:inline-flex;align-items:center;gap:.5rem;border:1px solid var(--line);background:var(--accent-2);color:#fff;
+  padding:10px 16px;border-radius:10px;font-weight:600;cursor:pointer;box-shadow:0 0 0 0 rgba(0,0,0,0);transition:.2s}
+.btn:hover{filter:brightness(1.1)}
+.btn.ghost{background:#1b1c20;color:#fff;border-color:var(--line)}
+.badge{display:inline-block;background:#1b1b1e;border:1px solid var(--line);color:var(--muted);padding:4px 10px;border-radius:999px;font-size:12px}
+.nav{position:sticky;top:0;z-index:5;background:rgba(11,11,12,.7);backdrop-filter:blur(8px);border-bottom:1px solid #131317}
+.nav .inner{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:.6rem;font-weight:800}
+.brand .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent-2),#8aaaff)}
+.hero{padding:72px 0;border-bottom:1px solid var(--line);background:
+  radial-gradient(1200px 600px at 70% -10%, #1a1b22 0%, transparent 60%),
+  radial-gradient(1000px 500px at -10% 10%, #12131a 0%, transparent 55%)}
+.hero h1{font-size:44px;line-height:1.1;margin:0 0 14px}
+.hero p{color:var(--muted);margin:0 0 22px;font-size:18px}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+.grid{display:grid;gap:16px}
+.cards-3{grid-template-columns:repeat(3,1fr)}
+.cards-2{grid-template-columns:repeat(2,1fr)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h3{margin:8px 0 6px}
+.card p{color:var(--muted)}
+.kpi{display:flex;gap:14px;align-items:center}
+.kpi .dot{width:10px;height:10px;border-radius:999px;background:var(--ok)}
+.section{padding:56px 0;border-bottom:1px solid var(--line)}
+.section h2{margin:0 0 12px;font-size:28px}
+.section p.lead{color:var(--muted);margin:0 0 24px}
+.list{display:grid;gap:10px}
+.list li{list-style:none;display:flex;gap:10px;align-items:flex-start}
+.list svg{flex:0 0 18px;margin-top:3px}
+.pricing{display:grid;gap:16px}
+.tier{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px}
+.tier .price{font-size:36px;font-weight:800}
+.tier ul{margin:12px 0 0;padding:0}
+.tier li{list-style:none;margin:8px 0;color:var(--muted);display:flex;gap:8px;align-items:center}
+.switch{display:inline-flex;background:#1b1b1f;border:1px solid var(--line);border-radius:999px;padding:4px}
+.switch button{border:0;background:transparent;color:var(--muted);padding:6px 10px;border-radius:999px;cursor:pointer}
+.switch button.active{background:var(--panel);color:#fff}
+.faq details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.faq summary{cursor:pointer;font-weight:600}
+.footer{padding:30px 0;color:var(--muted);font-size:14px}
+input,textarea,select{outline:none}
+.input, .field{width:100%;background:var(--panel-2);border:1px solid var(--line);color:#fff;border-radius:10px;padding:10px 12px}
+.form{max-width:420px;margin:40px auto}
+.center{text-align:center}
+@media (max-width:900px){
+  .cards-3{grid-template-columns:1fr}
+  .cards-2{grid-template-columns:1fr}
+  .hero h1{font-size:34px}
+  /* FAQ: each details expands independently without stretching its neighbor */
+  .faq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .faq-grid .card {
+    display: block;     /* remove equal-height behavior */
+    height: auto;       /* let content define height */
+  }
+  .faq-grid details summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .faq-grid details[open] {
+    background: #141518;  /* subtle highlight when open */
+  }
+  .faq-grid details p {
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+  
