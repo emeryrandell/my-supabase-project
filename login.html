@@ -1,140 +1,163 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>OpsBoard — Sign in / Create account</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>OpsBoard — Sign in</title>
+  <link rel="stylesheet" href="styles.css"/>
   <style>
-    .tabs{display:flex;gap:6px;background:#1b1b1f;border:1px solid var(--line);border-radius:12px;padding:4px;max-width:360px;margin:0 auto 16px}
-    .tab{flex:1;border:0;background:transparent;color:var(--muted);padding:8px 10px;border-radius:10px;cursor:pointer}
-    .tab.active{background:var(--panel);color:#fff;font-weight:700}
-    .plan-select{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
-    .plan{border:1px solid var(--line);background:#1b1c20;color:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
-    .plan.active{outline:2px solid var(--accent-2)}
+    /* small page-specific helpers, uses your palette */
+    .auth-wrap{max-width:520px;margin:60px auto;padding:0 20px}
+    .auth-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+    .tabs{display:flex;background:#1b1b1f;border:1px solid var(--line);border-radius:999px;gap:6px;padding:4px;margin-bottom:14px}
+    .tabs button{background:transparent;border:0;color:var(--muted);padding:8px 12px;border-radius:999px;cursor:pointer}
+    .tabs button.active{background:var(--panel-2);color:#fff}
+    .hint{color:var(--muted);font-size:13px;margin-top:8px}
+    .row{display:flex;gap:10px;align-items:center}
+    .center{text-align:center}
+    .tiny{font-size:12px;color:var(--muted)}
+    .badge-plan{display:inline-block;margin-left:8px;font-size:12px;background:#1b1b1e;border:1px solid var(--line);color:var(--muted);padding:2px 8px;border-radius:999px}
+    .spin{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-right-color:transparent;border-radius:50%;vertical-align:-3px;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
+  <!-- Nav -->
   <nav class="nav">
     <div class="container inner">
       <a class="brand" href="index.html"><span class="logo"></span><span>OpsBoard</span></a>
       <div style="display:flex;gap:10px">
         <a href="features.html" class="btn ghost">Features</a>
         <a href="pricing.html" class="btn ghost">Pricing</a>
+        <a href="login.html" class="btn">Sign in</a>
       </div>
     </div>
   </nav>
 
-  <main class="section">
-    <div class="container">
-      <div class="card form">
-        <div class="center" style="margin-bottom:8px">
-          <div class="tabs">
-            <button id="tabSignIn" class="tab active">Sign in</button>
-            <button id="tabSignUp" class="tab">Create account</button>
-          </div>
-        </div>
-
-        <!-- Sign in -->
-        <div id="paneSignIn">
-          <h2 style="margin:0 0 8px">Welcome back</h2>
-          <p class="muted" style="margin:0 0 16px">Sign in with your email. We’ll send a magic link.</p>
-          <label class="muted" for="emailIn">Email</label>
-          <input id="emailIn" class="field" type="email" placeholder="you@example.com" />
-          <div style="display:flex;gap:10px;margin-top:14px">
-            <button class="btn" onclick="fake('signin')">Send magic link</button>
-            <a class="btn ghost" href="index.html">Back</a>
-          </div>
-          <p id="msgIn" class="muted" style="margin-top:12px"></p>
-        </div>
-
-        <!-- Sign up -->
-        <div id="paneSignUp" style="display:none">
-          <h2 style="margin:0 0 8px">Create your account</h2>
-          <p class="muted" style="margin:0 0 16px">Pick a plan to get started. You can change anytime.</p>
-
-          <label class="muted" for="emailUp">Email</label>
-          <input id="emailUp" class="field" type="email" placeholder="you@example.com" />
-
-          <div style="margin-top:12px">
-            <div class="muted">Plan</div>
-            <div class="plan-select">
-              <button class="plan" data-plan="free">Free</button>
-              <button class="plan" data-plan="pro">Pro</button>
-              <button class="plan" data-plan="team">Team</button>
-            </div>
-            <input id="planHidden" type="hidden" value="free" />
-          </div>
-
-          <div style="display:flex;gap:10px;margin-top:14px">
-            <button class="btn" onclick="fake('signup')">Create account</button>
-            <a class="btn ghost" href="pricing.html">See pricing</a>
-          </div>
-          <p id="msgUp" class="muted" style="margin-top:12px"></p>
-        </div>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="center" style="margin-bottom:10px">
+        <h1 style="margin:0;font-size:22px" id="title">Sign in</h1>
+        <div class="tiny" id="subtitle">We’ll email you a magic link.</div>
+        <span class="badge-plan" id="planBadge" style="display:none"></span>
       </div>
 
-      <div class="card" style="max-width:420px;margin:20px auto 0">
-        <h3 style="margin:0 0 6px">Why OpsBoard?</h3>
-        <p class="muted" style="margin:0 0 12px">One focus, three tasks, and the KPIs that matter. That’s it.</p>
-        <a href="features.html" class="btn ghost">See features</a>
+      <!-- tabs -->
+      <div class="tabs center" role="tablist" aria-label="Auth mode">
+        <button id="tabSignin" class="active" role="tab" aria-selected="true">Sign in</button>
+        <button id="tabSignup" role="tab" aria-selected="false">Create account</button>
+      </div>
+
+      <!-- form -->
+      <div class="row" style="margin-bottom:10px">
+        <input id="email" class="input" placeholder="you@example.com" autocomplete="email" style="flex:1"/>
+      </div>
+      <button id="submit" class="btn" style="width:100%">Send magic link</button>
+      <div id="msg" class="hint"></div>
+
+      <div class="hint center" style="margin-top:14px">
+        Already signed in? <a href="dashboard.html" style="color:var(--accent)">Go to dashboard →</a>
       </div>
     </div>
-  </main>
+  </div>
 
   <footer class="footer">
-    <div class="container" style="display:flex;justify-content:space-between">
+    <div class="container" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div>© OpsBoard</div>
       <div style="display:flex;gap:16px">
-        <a href="index.html">Home</a><a href="features.html">Features</a><a href="pricing.html">Pricing</a>
+        <a href="index.html">Home</a>
+        <a href="features.html">Features</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
       </div>
     </div>
   </footer>
 
-  <script>
-    // tab logic
-    const tabIn = document.getElementById('tabSignIn');
-    const tabUp = document.getElementById('tabSignUp');
-    const paneIn = document.getElementById('paneSignIn');
-    const paneUp = document.getElementById('paneSignUp');
-    function setTab(mode){
-      const signUp = mode === 'signup';
-      tabIn.classList.toggle('active', !signUp);
-      tabUp.classList.toggle('active', signUp);
-      paneIn.style.display = signUp ? 'none' : 'block';
-      paneUp.style.display = signUp ? 'block' : 'none';
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+
+    // 1) Set these correctly (from Supabase → Settings → API)
+    const SUPABASE_URL  = 'https://xcsbogfddhvbyscjkjsi.supabase.co' 
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhjc2JvZ2ZkZGh2YnlzY2pranNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNzUzMjksImV4cCI6MjA3MDg1MTMyOX0.HGX4G2zw0F_EwMRuYOx3SMnP9qxurLHiYBUOe-9FEVk'
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON)
+
+    // 2) Elements
+    const $ = (s)=>document.querySelector(s)
+    const title = $('#title')
+    const subtitle = $('#subtitle')
+    const planBadge = $('#planBadge')
+    const email = $('#email')
+    const submit = $('#submit')
+    const msg = $('#msg')
+    const tabSignin = $('#tabSignin')
+    const tabSignup = $('#tabSignup')
+
+    // 3) Mode & plan from URL
+    const params = new URLSearchParams(location.search)
+    let mode = (params.get('mode') || 'signin').toLowerCase()
+    const plan = (params.get('plan') || '').toLowerCase()
+    if (plan) { planBadge.style.display='inline-block'; planBadge.textContent = plan === 'pro' ? 'Pro plan' : 'Free plan' }
+
+    function setMode(next){
+      mode = next
+      tabSignin.classList.toggle('active', mode==='signin')
+      tabSignup.classList.toggle('active', mode==='signup')
+      tabSignin.setAttribute('aria-selected', String(mode==='signin'))
+      tabSignup.setAttribute('aria-selected', String(mode==='signup'))
+      title.textContent = mode==='signin' ? 'Sign in' : 'Create account'
+      subtitle.textContent = 'We’ll email you a magic link.'
+      submit.textContent = 'Send magic link'
+      msg.textContent = ''
+      const u = new URL(location.href)
+      u.searchParams.set('mode', mode)
+      if (plan) u.searchParams.set('plan', plan)
+      history.replaceState({}, '', u)
     }
-    tabIn.onclick = ()=> setTab('signin');
-    tabUp.onclick = ()=> setTab('signup');
 
-    // plan preselect via query (?mode=signup&plan=pro)
-    const params = new URLSearchParams(location.search);
-    const defaultMode = params.get('mode') || 'signin';
-    const defaultPlan = (params.get('plan') || 'free').toLowerCase();
-    setTab(defaultMode);
+    // 4) Attach handlers BEFORE any awaits (so the tabs always work)
+    setMode(mode)
+    tabSignin.onclick = ()=> setMode('signin')
+    tabSignup.onclick = ()=> setMode('signup')
 
-    const planButtons = Array.from(document.querySelectorAll('.plan'));
-    const hidden = document.getElementById('planHidden');
-    function selectPlan(val){
-      hidden.value = val;
-      planButtons.forEach(b => b.classList.toggle('active', b.dataset.plan === val));
+    function setLoading(on){
+      submit.disabled = on
+      submit.innerHTML = on ? '<span class="spin"></span> Sending…' : 'Send magic link'
     }
-    planButtons.forEach(b => b.onclick = () => selectPlan(b.dataset.plan));
-    selectPlan(defaultPlan);
+    function showMsg(t){ msg.textContent = t }
 
-    // fake handlers (wire to Supabase later)
-    function fake(kind){
-      if(kind==='signin'){
-        const email = (document.getElementById('emailIn') as HTMLInputElement).value;
-        const msg = document.getElementById('msgIn');
-        msg.textContent = email ? 'Magic link would be sent. (Wire Supabase later.)' : 'Please enter your email.';
-      }else{
-        const email = (document.getElementById('emailUp') as HTMLInputElement).value;
-        const msg = document.getElementById('msgUp');
-        const plan = hidden.value;
-        msg.textContent = email ? `We’d create your ${plan.toUpperCase()} account and redirect to checkout. (Wire later.)` : 'Please enter your email.';
+    submit.onclick = async () => {
+      const v = (email.value || '').trim()
+      if (!v) return showMsg('Enter your email.')
+      setLoading(true)
+      try {
+        const options = {
+          emailRedirectTo: location.origin + '/dashboard.html',
+          data: { plan: plan || 'free', source: 'opsboard-login' }
+        }
+        const { error } = await supabase.auth.signInWithOtp({ email: v, options })
+        showMsg(error ? error.message : 'Check your email for the magic link.')
+      } catch (e) {
+        showMsg('Could not reach Supabase. Check URL/key.')
+        console.error(e)
+      } finally {
+        setLoading(false)
       }
     }
+
+    email.addEventListener('keydown', (e)=>{ if (e.key==='Enter') submit.click() })
+
+    // 5) Do the session check AFTER (non-blocking)
+    ;(async ()=>{
+      try {
+        const { data:{ session } } = await supabase.auth.getSession()
+        if (session) location.href = 'dashboard.html'
+      } catch (e) {
+        console.warn('Session check failed:', e)
+      }
+    })()
   </script>
+
 </body>
 </html>
+
