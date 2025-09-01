@@ -1,0 +1,193 @@
+<!doctype html>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>OpsBoard — Dashboard</title>
+<link rel="stylesheet" href="styles.css"/>
+<body style="font-family:Inter,system-ui;background:#0b0b0c;color:#fff">
+  <nav class="nav">
+    <div class="container inner">
+      <a class="brand" href="index.html"><span class="logo"></span><span>OpsBoard</span></a>
+      <div style="display:flex;gap:10px">
+        <a href="pricing.html" class="btn ghost">Pricing</a>
+        <button id="signout" class="btn">Sign out</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container" style="max-width:980px;padding:24px 20px">
+    <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <h1 style="margin:0 0 4px;font-size:22px">Daily Board</h1>
+        <div id="saveStatus" style="color:#a0a3a7;font-size:13px">Loaded</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <label style="color:#a0a3a7;font-size:13px">Date</label>
+        <input id="date" type="date" class="input" style="width:auto"/>
+        <button id="todayBtn" class="btn ghost">Today</button>
+      </div>
+    </header>
+
+    <div class="grid cards-2">
+      <section class="card">
+        <div class="label">Today’s Focus</div>
+        <input id="focus" class="input" placeholder="What is the ONE win today?"/>
+      </section>
+
+      <section class="card">
+        <div class="label">Notes</div>
+        <textarea id="notes" class="input" style="min-height:110px" placeholder="What moved the needle today?"></textarea>
+      </section>
+
+      <section class="card">
+        <div class="label">Top 3 Tasks</div>
+        <div class="list">
+          <div class="row" style="display:flex;gap:8px;align-items:center">
+            <input id="t0done" type="checkbox"/><input id="t0" class="input" placeholder="Task 1"/>
+          </div>
+          <div class="row" style="display:flex;gap:8px;align-items:center">
+            <input id="t1done" type="checkbox"/><input id="t1" class="input" placeholder="Task 2"/>
+          </div>
+          <div class="row" style="display:flex;gap:8px;align-items:center">
+            <input id="t2done" type="checkbox"/><input id="t2" class="input" placeholder="Task 3"/>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="label">KPIs (today)</div>
+        <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+          <input id="rev" class="input" type="number" placeholder="Revenue"/>
+          <input id="vis" class="input" type="number" placeholder="Visitors"/>
+          <input id="subs" class="input" type="number" placeholder="Email subs"/>
+          <input id="fol" class="input" type="number" placeholder="Followers"/>
+        </div>
+      </section>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+      <button id="save" class="btn">Save Day</button>
+      <span style="color:#a0a3a7;font-size:13px">Auto-saves as you type</span>
+    </div>
+
+    <section class="card" style="margin-top:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="label" style="margin:0">History (last 30 days)</div>
+      </div>
+      <div style="overflow:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr>
+            <th style="text-align:left;padding:10px;color:#a0a3a7">Date</th>
+            <th style="text-align:left;padding:10px;color:#a0a3a7">Focus</th>
+            <th style="text-align:left;padding:10px;color:#a0a3a7">Rev</th>
+            <th style="text-align:left;padding:10px;color:#a0a3a7">Visitors</th>
+            <th style="text-align:left;padding:10px;color:#a0a3a7">Subs</th>
+            <th style="text-align:left;padding:10px;color:#a0a3a7">Done</th>
+            <th style="text-align:left;padding:10px;color:#a0a3a7">Open</th>
+          </tr></thead>
+          <tbody id="hist"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+  const SUPABASE_URL  = 'https://YOUR-PROJECT-REF.supabase.co'
+  const SUPABASE_ANON = 'YOUR-ANON-KEY'
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON)
+
+  const $ = (s)=>document.querySelector(s)
+  const status = (t)=> $('#saveStatus').textContent = t
+  const isoToday = ()=>{ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10) }
+
+  // Require session
+  (async ()=>{
+    try {
+      const { data:{ session } } = await supabase.auth.getSession()
+      if (!session) { location.href='login.html'; return }
+      // Boot once session exists
+      boot(session)
+    } catch(e){ console.error(e); }
+  })()
+
+  async function boot(session){
+    // refs
+    const dateEl=$('#date'), focusEl=$('#focus'), notesEl=$('#notes')
+    const t=[ $('#t0'),$('#t1'),$('#t2') ], td=[ $('#t0done'),$('#t1done'),$('#t2done') ]
+    const revEl=$('#rev'), visEl=$('#vis'), subsEl=$('#subs'), folEl=$('#fol')
+    const histBody=$('#hist')
+
+    $('#signout').onclick = async ()=>{ await supabase.auth.signOut(); location.href='login.html' }
+    $('#todayBtn').onclick = ()=> dateEl.value = isoToday()
+    dateEl.value = isoToday()
+
+    async function loadDay(d){
+      const { data, error } = await supabase.from('daily_entries')
+        .select('id,d,focus,notes,tasks,kpis').eq('d', d).maybeSingle()
+      if (error && error.code!=='PGRST116') console.error(error)
+      const e = data || { d, focus:'', notes:'', tasks:[{},{},{}], kpis:{} }
+      focusEl.value = e.focus || ''
+      notesEl.value = e.notes || ''
+      t.forEach((el,i)=> el.value = (e.tasks?.[i]?.title ?? ''))
+      td.forEach((el,i)=> el.checked = !!(e.tasks?.[i]?.done))
+      revEl.value = e.kpis?.rev ?? ''
+      visEl.value = e.kpis?.vis ?? ''
+      subsEl.value = e.kpis?.subs ?? ''
+      folEl.value = e.kpis?.fol ?? ''
+      status('Loaded')
+    }
+
+    async function saveDay(){
+      status('Saving…')
+      const d = dateEl.value
+      const payload = {
+        user_id: session.user.id,
+        d,
+        focus: focusEl.value || '',
+        notes: notesEl.value || '',
+        tasks: [0,1,2].map(i=>({ title: t[i].value || '', done: td[i].checked })),
+        kpis: {
+          rev: Number(revEl.value||0)||0,
+          vis: Number(visEl.value||0)||0,
+          subs: Number(subsEl.value||0)||0,
+          fol: Number(folEl.value||0)||0
+        }
+      }
+      const { error } = await supabase.from('daily_entries').upsert(payload, { onConflict:'user_id,d' })
+      if (error) { status('Error'); console.error(error) } else { status('Saved ✅'); setTimeout(()=>status(''),1200) }
+      loadHistory()
+    }
+
+    // autosave (debounced)
+    let timer; const triggerSave=()=>{ clearTimeout(timer); timer=setTimeout(saveDay,1000) }
+    ;[focusEl,notesEl,revEl,visEl,subsEl,folEl,...t,...td].forEach(el=>{
+      el.addEventListener(el.type==='checkbox'?'change':'input', triggerSave)
+    })
+    $('#save').onclick = saveDay
+    dateEl.onchange = ()=> loadDay(dateEl.value)
+
+    async function loadHistory(){
+      const { data } = await supabase.from('daily_entries')
+        .select('id,d,focus,kpis,tasks').order('d',{ascending:false}).limit(30)
+      histBody.innerHTML = (data||[]).map(row=>{
+        const done = Array.isArray(row.tasks)? row.tasks.filter(t=>t?.done).length : 0
+        const open = Array.isArray(row.tasks)? row.tasks.filter(t=>!t?.done && (t?.title||'').trim()).length : 0
+        return `<tr style="border-top:1px solid #232327;cursor:pointer"
+                  onclick="document.querySelector('#date').value='${row.d}'; window.__load('${row.d}')">
+          <td style="padding:10px">${row.d}</td>
+          <td style="padding:10px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px">${row.focus||'—'}</td>
+          <td style="padding:10px">${row.kpis?.rev ?? 0}</td>
+          <td style="padding:10px">${row.kpis?.vis ?? 0}</td>
+          <td style="padding:10px">${row.kpis?.subs ?? 0}</td>
+          <td style="padding:10px">${done}</td>
+          <td style="padding:10px">${open}</td>
+        </tr>`
+      }).join('')
+    }
+    window.__load = (d)=> loadDay(d)
+
+    await loadDay(dateEl.value)
+    await loadHistory()
+  }
+</script>
+</body>
