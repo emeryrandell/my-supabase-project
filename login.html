@@ -63,7 +63,7 @@
 
   <footer class="footer">
     <div class="container" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
-      <div>© OpsBoard</div>
+      <div>© CoreBoard</div>
       <div style="display:flex;gap:16px">
         <a href="index.html">Home</a>
         <a href="features.html">Features</a>
@@ -133,7 +133,7 @@
       try {
         const options = {
           emailRedirectTo: location.origin + '/dashboard.html',
-          data: { plan: plan || 'free', source: 'opsboard-login' }
+          data: { plan: plan || 'free', source: 'coreboard-login' }
         }
         const { error } = await supabase.auth.signInWithOtp({ email: v, options })
         showMsg(error ? error.message : 'Check your email for the magic link.')
