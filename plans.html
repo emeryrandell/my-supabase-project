@@ -1,0 +1,97 @@
+<!doctype html>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>OpsBoard — Choose your plan</title>
+<link rel="stylesheet" href="styles.css"/>
+<body style="font-family:Inter,system-ui;background:#0b0b0c;color:#fff">
+  <nav class="nav">
+    <div class="container inner">
+      <a class="brand" href="index.html"><span class="logo"></span><span>OpsBoard</span></a>
+      <div><button id="signout" class="btn">Sign out</button></div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container center">
+      <span class="badge">Welcome!</span>
+      <h1>Pick your plan</h1>
+      <p class="lead" style="max-width:680px;margin:0 auto">Start on Free or go Pro for unlimited history and exports.</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container grid cards-2">
+      <div class="tier">
+        <h3>Free</h3>
+        <div class="price">$0</div>
+        <ul>
+          <li>• Daily board</li>
+          <li>• Top focus + 3 tasks</li>
+          <li>• KPIs + Notes</li>
+          <li>• 30-day history</li>
+        </ul>
+        <div style="margin-top:14px">
+          <button id="chooseFree" class="btn ghost">Continue on Free</button>
+        </div>
+      </div>
+
+      <div class="tier" style="border-color:#3556ff; outline:2px solid rgba(76,118,255,.25)">
+        <div class="badge" style="margin-bottom:8px">Most popular</div>
+        <h3>Pro</h3>
+        <div class="price">$19</div>
+        <ul>
+          <li>• Unlimited history</li>
+          <li>• Nightly email recap</li>
+          <li>• CSV export</li>
+          <li>• Priority support</li>
+        </ul>
+        <div style="margin-top:14px">
+          <button id="choosePro" class="btn">Upgrade to Pro</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container center" style="color:#a0a3a7;font-size:13px" id="note"></div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+    const supabase = createClient('https://YOUR-PROJECT-REF.supabase.co', 'YOUR-ANON-KEY')
+
+    const note = document.getElementById('note')
+    document.getElementById('signout').onclick = async ()=>{ await supabase.auth.signOut(); location.href='login.html' }
+
+    // Require session
+    const { data:{ session } } = await supabase.auth.getSession()
+    if (!session) { location.href = 'login.html'; throw new Error('no session') }
+
+    // Load profile
+    const { data: profile, error } = await supabase
+      .from('profiles').select('user_id,email,role,plan,billing_exempt').eq('user_id', session.user.id).maybeSingle()
+    if (error) console.error(error)
+
+    // If owner or exempt, auto-pro and go to dashboard
+    if (profile?.role === 'owner' || profile?.billing_exempt) {
+      await supabase.from('profiles').update({ plan: 'pro' }).eq('user_id', session.user.id)
+      location.href = 'dashboard.html'
+    }
+
+    // Choose Free: mark plan='free' then continue
+    document.getElementById('chooseFree').onclick = async ()=>{
+      await supabase.from('profiles').update({ plan: 'free' }).eq('user_id', session.user.id)
+      location.href = 'dashboard.html'
+    }
+
+    // Choose Pro: (temporary) mark plan='pro' and continue
+    // Later: replace this with Stripe Checkout redirect
+    document.getElementById('choosePro').onclick = async ()=>{
+      // TODO: integrate Stripe here (redirect to Checkout)
+      // Temporary: direct-upgrade for testing
+      await supabase.from('profiles').update({ plan: 'pro' }).eq('user_id', session.user.id)
+      location.href = 'dashboard.html'
+    }
+
+    // Tiny info banner
+    note.textContent = 'You can change plans anytime in Settings later.'
+  </script>
+</body>
