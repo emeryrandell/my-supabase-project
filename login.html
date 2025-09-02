@@ -6,7 +6,6 @@
   <title>CoreBoard — Sign in</title>
   <link rel="stylesheet" href="styles.css"/>
   <style>
-    /* small page-specific helpers, uses your palette */
     .auth-wrap{max-width:520px;margin:60px auto;padding:0 20px}
     .auth-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
     .tabs{display:flex;background:#1b1b1f;border:1px solid var(--line);border-radius:999px;gap:6px;padding:4px;margin-bottom:14px}
@@ -38,7 +37,7 @@
     <div class="auth-card">
       <div class="center" style="margin-bottom:10px">
         <h1 style="margin:0;font-size:22px" id="title">Sign in</h1>
-        <div class="tiny" id="subtitle">We’ll email you a magic link.</div>
+        <div class="tiny" id="subtitle">Use email + password or get a magic link.</div>
         <span class="badge-plan" id="planBadge" style="display:none"></span>
       </div>
 
@@ -49,10 +48,13 @@
       </div>
 
       <!-- form -->
-      <div class="row" style="margin-bottom:10px">
-        <input id="email" class="input" placeholder="you@example.com" autocomplete="email" style="flex:1"/>
+      <div class="row" style="margin-bottom:10px;flex-direction:column;align-items:stretch">
+        <input id="email" class="input" placeholder="you@example.com" autocomplete="email"/>
+        <input id="password" class="input" type="password" placeholder="Password (6+ chars)" style="margin-top:8px"/>
+        <div class="tiny" style="margin-top:6px">Tip: On “Sign in”, leave password blank to receive a magic link instead.</div>
       </div>
-      <button id="submit" class="btn" style="width:100%">Send magic link</button>
+
+      <button id="submit" class="btn" style="width:100%">Continue</button>
       <div id="msg" class="hint"></div>
 
       <div class="hint center" style="margin-top:14px">
@@ -77,27 +79,32 @@
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 
-    // 1) Set these correctly (from Supabase → Settings → API)
-    const SUPABASE_URL  = 'https://xcsbogfddhvbyscjkjsi.supabase.co' 
+    // 🔧 Set these from Supabase → Settings → API
+    const SUPABASE_URL  = 'https://xcsbogfddhvbyscjkjsi.supabase.co'
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhjc2JvZ2ZkZGh2YnlzY2pranNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNzUzMjksImV4cCI6MjA3MDg1MTMyOX0.HGX4G2zw0F_EwMRuYOx3SMnP9qxurLHiYBUOe-9FEVk'
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON)
 
-    // 2) Elements
+    // Elements
     const $ = (s)=>document.querySelector(s)
     const title = $('#title')
     const subtitle = $('#subtitle')
     const planBadge = $('#planBadge')
     const email = $('#email')
+    const password = $('#password')
     const submit = $('#submit')
     const msg = $('#msg')
     const tabSignin = $('#tabSignin')
     const tabSignup = $('#tabSignup')
 
-    // 3) Mode & plan from URL
+    // Mode & plan from URL (?mode=signup&plan=pro)
     const params = new URLSearchParams(location.search)
-    let mode = (params.get('mode') || 'signin').toLowerCase()
-    const plan = (params.get('plan') || '').toLowerCase()
-    if (plan) { planBadge.style.display='inline-block'; planBadge.textContent = plan === 'pro' ? 'Pro plan' : 'Free plan' }
+    let mode = (params.get('mode') || 'signin').toLowerCase() // 'signin' | 'signup'
+    const plan = (params.get('plan') || '').toLowerCase()     // 'free' | 'pro' | ''
+
+    if (plan) {
+      planBadge.style.display='inline-block'
+      planBadge.textContent = plan === 'pro' ? 'Pro plan' : 'Free plan'
+    }
 
     function setMode(next){
       mode = next
@@ -106,8 +113,8 @@
       tabSignin.setAttribute('aria-selected', String(mode==='signin'))
       tabSignup.setAttribute('aria-selected', String(mode==='signup'))
       title.textContent = mode==='signin' ? 'Sign in' : 'Create account'
-      subtitle.textContent = 'We’ll email you a magic link.'
-      submit.textContent = 'Send magic link'
+      subtitle.textContent = 'Use email + password or get a magic link.'
+      submit.textContent = mode==='signin' ? 'Continue' : 'Create account'
       msg.textContent = ''
       const u = new URL(location.href)
       u.searchParams.set('mode', mode)
@@ -115,39 +122,71 @@
       history.replaceState({}, '', u)
     }
 
-    // 4) Attach handlers BEFORE any awaits (so the tabs always work)
+    // Attach handlers before any awaits
     setMode(mode)
     tabSignin.onclick = ()=> setMode('signin')
     tabSignup.onclick = ()=> setMode('signup')
 
     function setLoading(on){
       submit.disabled = on
-      submit.innerHTML = on ? '<span class="spin"></span> Sending…' : 'Send magic link'
+      submit.innerHTML = on ? '<span class="spin"></span> Working…' : (mode==='signin' ? 'Continue' : 'Create account')
     }
-    function showMsg(t){ msg.textContent = t }
+    const showMsg = (t)=> { msg.textContent = t }
 
+    // Core logic:
+    // - SIGNUP: create account → sign in → go to plans.html
+    // - SIGNIN: if password present, sign in; else send magic link
     submit.onclick = async () => {
-      const v = (email.value || '').trim()
-      if (!v) return showMsg('Enter your email.')
+      const em = (email.value || '').trim()
+      const pw = (password.value || '').trim()
+      if (!em) return showMsg('Enter your email.')
+
       setLoading(true)
       try {
-        const options = {
-          emailRedirectTo: location.origin + '/dashboard.html',
-          data: { plan: plan || 'free', source: 'coreboard-login' }
+        if (mode === 'signup') {
+          if (!pw || pw.length < 6) { showMsg('Choose a password (6+ chars).'); setLoading(false); return }
+          // 1) Create account
+          const { error: upErr } = await supabase.auth.signUp({
+            email: em,
+            password: pw,
+            options: {
+              emailRedirectTo: location.origin + '/dashboard.html',
+              data: { plan: plan || 'free', source: 'coreboard-signup' }
+            }
+          })
+          if (upErr) { showMsg(upErr.message); setLoading(false); return }
+
+          // 2) Immediately sign in
+          const { error: inErr } = await supabase.auth.signInWithPassword({ email: em, password: pw })
+          if (inErr) { showMsg(inErr.message); setLoading(false); return }
+
+          // 3) Choose plan
+          location.href = 'plans.html'
+          return
         }
-        const { error } = await supabase.auth.signInWithOtp({ email: v, options })
-        showMsg(error ? error.message : 'Check your email for the magic link.')
+
+        // mode === 'signin'
+        if (pw) {
+          const { error } = await supabase.auth.signInWithPassword({ email: em, password: pw })
+          if (error) showMsg(error.message); else location.href = 'dashboard.html'
+        } else {
+          const { error } = await supabase.auth.signInWithOtp({
+            email: em,
+            options: { emailRedirectTo: location.origin + '/dashboard.html', data: { plan: plan || 'free' } }
+          })
+          showMsg(error ? error.message : 'Check your email for the magic link.')
+        }
       } catch (e) {
-        showMsg('Could not reach Supabase. Check URL/key.')
-        console.error(e)
+        console.error(e); showMsg('Could not reach Supabase. Check URL/key.')
       } finally {
         setLoading(false)
       }
     }
 
     email.addEventListener('keydown', (e)=>{ if (e.key==='Enter') submit.click() })
+    password.addEventListener('keydown', (e)=>{ if (e.key==='Enter') submit.click() })
 
-    // 5) Do the session check AFTER (non-blocking)
+    // If already logged in → dashboard
     ;(async ()=>{
       try {
         const { data:{ session } } = await supabase.auth.getSession()
@@ -157,7 +196,7 @@
       }
     })()
   </script>
-
 </body>
 </html>
+
 
