@@ -9,61 +9,30 @@
   <nav class="nav">
     <div class="container inner">
       <a class="brand" href="index.html"><span class="logo"></span><span>CoreBoard</span></a>
-      <div style="display:flex;gap:10px;align-items:center">
-        <span id="planPill" class="badge" style="display:none"></span>
+      <div style="display:flex;gap:10px">
         <button id="signout" class="btn">Sign out</button>
       </div>
     </div>
   </nav>
 
+  <!-- Page -->
   <div class="container" style="max-width:1000px;padding:18px 20px 28px">
-    <!-- Header -->
     <header style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:14px;flex-wrap:wrap">
       <div>
         <h1 style="margin:0 0 6px;font-size:24px;line-height:1">Daily Board</h1>
-        <!-- fixed-height status row to avoid layout shift -->
+        <!-- fixed height line to prevent layout shift -->
         <div style="height:18px;display:flex;align-items:center;gap:10px">
-          <span id="saveStatus" class="tiny" style="color:#a0a3a7;">Loaded</span>
-          <span id="netStatus" class="tiny" style="color:#a0a3a7;display:none">Offline — changes queued</span>
+          <span id="saveStatus" class="tiny" style="color:#a0a3a7;">—</span>
+          <span id="err" class="tiny" style="color:#ffb3b3;display:none"></span>
         </div>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <label class="tiny" style="color:#a0a3a7">Date</label>
         <input id="date" type="date" class="input" style="width:auto"/>
         <button id="todayBtn" class="btn ghost">Today</button>
-        <button id="copyYesterday" class="btn ghost" title="Copy yesterday's entry into today">Copy yesterday</button>
-        <button id="exportCsv" class="btn ghost" title="Export last 30 days as CSV">Export CSV</button>
       </div>
     </header>
 
-    <!-- Top KPIs + Progress -->
-    <section class="grid cards-3" style="margin-bottom:14px">
-      <div class="card">
-        <div class="kpi"><span class="dot"></span><div>
-          <div class="tiny" style="color:#a0a3a7">Streak</div>
-          <div id="streak" style="font-weight:800;font-size:18px">0 days</div>
-        </div></div>
-      </div>
-      <div class="card">
-        <div class="kpi"><span class="dot"></span><div>
-          <div class="tiny" style="color:#a0a3a7">Tasks progress</div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <div id="progressText" style="font-weight:800;font-size:18px">0/3</div>
-            <div style="flex:1;height:8px;background:#1b1b1e;border:1px solid var(--line);border-radius:999px;overflow:hidden">
-              <div id="progressBar" style="height:100%;width:0%;background:var(--accent-2)"></div>
-            </div>
-          </div>
-        </div></div>
-      </div>
-      <div class="card">
-        <div class="kpi"><span class="dot"></span><div>
-          <div class="tiny" style="color:#a0a3a7">Today revenue</div>
-          <div id="revToday" style="font-weight:800;font-size:18px">$0</div>
-        </div></div>
-      </div>
-    </section>
-
-    <!-- Main grid -->
     <div class="grid cards-2">
       <section class="card">
         <div class="label">Today’s Focus</div>
@@ -76,10 +45,7 @@
       </section>
 
       <section class="card">
-        <div class="label" style="display:flex;justify-content:space-between;align-items:center">
-          <span>Top 3 Tasks</span>
-          <button id="clearDone" class="btn ghost" style="padding:6px 10px">Clear done</button>
-        </div>
+        <div class="label">Top 3 Tasks</div>
         <div class="list">
           <div class="row" style="display:flex;gap:8px;align-items:center">
             <input id="t0done" type="checkbox"/><input id="t0" class="input" placeholder="Task 1"/>
@@ -101,20 +67,17 @@
           <input id="subs" class="input" type="number" placeholder="Email subs"/>
           <input id="fol"  class="input" type="number" placeholder="Followers"/>
         </div>
-        <div class="tiny" style="color:#a0a3a7;margin-top:8px">Tip: numbers only; we’ll format for you.</div>
       </section>
     </div>
 
     <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;align-items:center">
       <button id="save" class="btn">Save</button>
-      <span class="tiny" style="color:#a0a3a7">Auto-saves after 1s of no typing</span>
+      <span class="tiny" style="color:#a0a3a7">Auto-saves after 1s idle</span>
     </div>
 
-    <!-- History -->
     <section class="card" style="margin-top:18px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div class="label" style="margin:0">History (last 30 days)</div>
-        <input id="filter" class="input" placeholder="Filter by focus…" style="max-width:260px"/>
       </div>
       <div style="overflow:auto">
         <table style="width:100%;border-collapse:collapse">
@@ -133,123 +96,72 @@
     </section>
   </div>
 
-  <!-- Toast (no layout shift) -->
+  <!-- Non-shifting toast -->
   <div id="toast" style="position:fixed;right:16px;bottom:16px;display:none;background:#141416;border:1px solid var(--line);padding:10px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:14px"></div>
 
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
   // 🔧 Set these
-  const SUPABASE_URL  = 'https://YOUR-PROJECT-REF.supabase.co'
-  const SUPABASE_ANON = 'YOUR-ANON-KEY'
+  const SUPABASE_URL  = 'https://xcsbogfddhvbyscjkjsi.supabase.co'
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhjc2JvZ2ZkZGh2YnlzY2pranNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNzUzMjksImV4cCI6MjA3MDg1MTMyOX0.HGX4G2zw0F_EwMRuYOx3SMnP9qxurLHiYBUOe-9FEVk'
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON)
 
+  // ===== utils
   const $ = (s)=>document.querySelector(s)
-  const $$ = (s)=>Array.from(document.querySelectorAll(s))
-  const statusTxt = $('#saveStatus')
-  const netStatus = $('#netStatus')
-  const toast = $('#toast')
+  const status = (t)=> $('#saveStatus').textContent = t
+  const showErr = (t)=> { const e=$('#err'); e.textContent=t; e.style.display = t?'inline':'none' }
+  const isoToday = ()=>{ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10) }
 
-  const isoToday = () => { const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10) }
-  const fmtMoney = (n)=>'$'+(Number(n||0)).toLocaleString()
+  // ===== toast (no reflow)
+  const toast = $('#toast'); let toastTimer
+  function showToast(text, ms=1200){ toast.textContent=text; toast.style.display='block'; clearTimeout(toastTimer); toastTimer=setTimeout(()=>toast.style.display='none', ms) }
 
-  // ======= Auth gate
+  // ===== Auth gate
   const { data:{ session } } = await supabase.auth.getSession()
   if (!session) { location.href='login.html'; throw new Error('no session') }
 
-  // ======= Refs
+  // ===== refs
   const dateEl=$('#date'), focusEl=$('#focus'), notesEl=$('#notes')
-  const t=[ $('#t0'),$('#t1'),$('#t2') ]
-  const td=[ $('#t0done'),$('#t1done'),$('#t2done') ]
+  const t=[ $('#t0'),$('#t1'),$('#t2') ], td=[ $('#t0done'),$('#t1done'),$('#t2done') ]
   const revEl=$('#rev'), visEl=$('#vis'), subsEl=$('#subs'), folEl=$('#fol')
-  const histBody=$('#hist'), filterEl=$('#filter')
-  const progressBar=$('#progressBar'), progressText=$('#progressText'), streakEl=$('#streak'), revTodayEl=$('#revToday')
+  const histBody=$('#hist')
 
-  // ======= Nav actions
+  // ===== nav
   $('#signout').onclick = async ()=>{ await supabase.auth.signOut(); location.href='login.html' }
   $('#todayBtn').onclick = ()=> { dateEl.value = isoToday(); loadDay(dateEl.value) }
-  $('#clearDone').onclick = ()=> { td.forEach(c=>c.checked=false); triggerSave() }
-  $('#copyYesterday').onclick = async ()=> copyFromYesterday()
-  $('#exportCsv').onclick = ()=> exportCsv()
 
-  // ======= Plan pill
-  ;(async ()=>{
-    const { data: p } = await supabase.from('profiles').select('plan,role').eq('user_id', session.user.id).maybeSingle()
-    if (p) {
-      const pill = $('#planPill')
-      pill.textContent = (p.role==='owner'?'Owner • ':'') + (p.plan||'free').toUpperCase()
-      pill.style.display='inline-block'
-    }
-  })()
-
-  // ======= Net status (no layout shift)
-  function updateOnline(){ netStatus.style.display = navigator.onLine ? 'none' : 'inline' }
-  window.addEventListener('online',  ()=>{ updateOnline(); tryFlushQueue() })
-  window.addEventListener('offline', updateOnline)
-  updateOnline()
-
-  // ======= Save toast (no reflow)
-  let toastTimer
-  function showToast(text, ms=1400){
-    toast.textContent = text
-    toast.style.display='block'
-    clearTimeout(toastTimer)
-    toastTimer = setTimeout(()=> toast.style.display='none', ms)
-  }
-
-  // ======= Progress calc
-  function updateProgress(){
-    const total = td.length
-    const done = td.filter(c=>c.checked).length
-    progressText.textContent = `${done}/${total}`
-    progressBar.style.width = `${(done/total)*100}%`
-  }
-  td.forEach(c=> c.addEventListener('change', updateProgress))
-  updateProgress()
-
-  // ======= Streak calc (consecutive days with any activity)
-  async function calcStreak(){
-    const { data } = await supabase.from('daily_entries')
-      .select('d,tasks,focus,notes').order('d', {ascending:false}).limit(45)
-    const days = (data||[]).map(r=>r.d)
-    const hasActivity = (r)=> {
-      const anyTask = Array.isArray(r.tasks) && r.tasks.some(t=> (t?.title||'').trim() || t?.done)
-      return anyTask || (r.focus||'').trim() || (r.notes||'').trim()
-    }
-    let streak=0, cursor = new Date(isoToday())
-    for (let i=0;i<60;i++){
-      const dIso = cursor.toISOString().slice(0,10)
-      const r = (data||[]).find(x=>x.d===dIso)
-      if (r && hasActivity(r)) streak++
-      else break
-      cursor.setDate(cursor.getDate()-1)
-    }
-    streakEl.textContent = `${streak} day${streak===1?'':'s'}`
-  }
-
-  // ======= Load / Save
+  // ===== state
   dateEl.value = isoToday()
+  let saveAbort = null
 
   async function loadDay(d){
-    statusTxt.textContent='Loading…'
-    const { data, error } = await supabase.from('daily_entries')
-      .select('id,d,focus,notes,tasks,kpis').eq('d', d).maybeSingle()
-    if (error && error.code!=='PGRST116') console.error(error)
-    const e = data || { d, focus:'', notes:'', tasks:[{},{},{}], kpis:{} }
-    focusEl.value = e.focus || ''
-    notesEl.value = e.notes || ''
-    t.forEach((el,i)=> el.value = (e.tasks?.[i]?.title ?? ''))
-    td.forEach((el,i)=> el.checked = !!(e.tasks?.[i]?.done))
-    revEl.value  = e.kpis?.rev ?? ''
-    visEl.value  = e.kpis?.vis ?? ''
-    subsEl.value = e.kpis?.subs ?? ''
-    folEl.value  = e.kpis?.fol ?? ''
-    revTodayEl.textContent = fmtMoney(e.kpis?.rev ?? 0)
-    updateProgress()
-    statusTxt.textContent='Loaded'
+    showErr('')
+    status('Loading…')
+    try {
+      const { data, error } = await supabase.from('daily_entries')
+        .select('id,d,focus,notes,tasks,kpis').eq('d', d).maybeSingle()
+      if (error && error.code!=='PGRST116') throw error
+      const e = data || { d, focus:'', notes:'', tasks:[{},{},{}], kpis:{} }
+      focusEl.value = e.focus || ''
+      notesEl.value = e.notes || ''
+      t.forEach((el,i)=> el.value = (e.tasks?.[i]?.title ?? ''))
+      td.forEach((el,i)=> el.checked = !!(e.tasks?.[i]?.done))
+      revEl.value = e.kpis?.rev ?? ''
+      visEl.value = e.kpis?.vis ?? ''
+      subsEl.value = e.kpis?.subs ?? ''
+      folEl.value = e.kpis?.fol ?? ''
+      status('Loaded')
+    } catch(err){
+      console.error(err); showErr('Load failed'); status('Error')
+    }
   }
 
   async function saveDay(){
+    // cancel any in-flight save
+    if (saveAbort){ saveAbort.abort() }
+    saveAbort = new AbortController()
+    status('Saving…'); showErr('')
     const d = dateEl.value
     const payload = {
       user_id: session.user.id,
@@ -258,135 +170,59 @@
       notes: notesEl.value || '',
       tasks: [0,1,2].map(i=>({ title: t[i].value || '', done: td[i].checked })),
       kpis: {
-        rev: Number(revEl.value||0) || 0,
-        vis: Number(visEl.value||0) || 0,
-        subs: Number(subsEl.value||0) || 0,
-        fol: Number(folEl.value||0) || 0
+        rev: Number(revEl.value||0)||0,
+        vis: Number(visEl.value||0)||0,
+        subs: Number(subsEl.value||0)||0,
+        fol: Number(folEl.value||0)||0
       }
     }
-    statusTxt.textContent='Saving…'
     try {
       const { error } = await supabase.from('daily_entries').upsert(payload, { onConflict:'user_id,d' })
       if (error) throw error
-      statusTxt.textContent='Saved ✅'
+      status('Saved ✅')
       showToast('Saved')
-      await loadHistory(false)
-      await calcStreak()
-      revTodayEl.textContent = fmtMoney(payload.kpis.rev)
-    } catch (e) {
-      console.error(e)
-      statusTxt.textContent='Error — queued'
-      queueSave(payload) // store + retry later
-      showToast('Offline — changes queued', 1600)
-    }
+      loadHistory(false)
+    } catch(err){
+      if (err?.name === 'AbortError') return
+      console.error(err); status('Error'); showErr('Save failed — check connection or RLS')
+    } finally { saveAbort = null }
   }
 
-  // ======= Autosave (debounced & stable height)
-  let timer
-  function triggerSave(){ clearTimeout(timer); timer = setTimeout(saveDay, 900) }
+  // ===== autosave (debounced)
+  let timer; const triggerSave=()=>{ clearTimeout(timer); timer=setTimeout(saveDay, 900) }
   ;[focusEl,notesEl,revEl,visEl,subsEl,folEl,...t,...td].forEach(el=>{
     el.addEventListener(el.type==='checkbox'?'change':'input', triggerSave)
   })
   $('#save').onclick = saveDay
   dateEl.onchange = ()=> loadDay(dateEl.value)
 
-  // ======= History (with filter)
-  let lastHistory = []
-  async function loadHistory(scrollTop=true){
-    const { data } = await supabase.from('daily_entries')
-      .select('id,d,focus,kpis,tasks').order('d',{ascending:false}).limit(30)
-    lastHistory = data || []
-    renderHistory()
-    if (scrollTop) document.querySelector('.card table').scrollTop = 0
+  // ===== history
+  async function loadHistory(){
+    try{
+      const { data } = await supabase.from('daily_entries')
+        .select('id,d,focus,kpis,tasks').order('d',{ascending:false}).limit(30)
+      histBody.innerHTML = (data||[]).map(row=>{
+        const done = Array.isArray(row.tasks)? row.tasks.filter(t=>t?.done).length : 0
+        const open = Array.isArray(row.tasks)? row.tasks.filter(t=>!t?.done && (t?.title||'').trim()).length : 0
+        return `<tr style="border-top:1px solid #232327;cursor:pointer"
+                  onclick="document.querySelector('#date').value='${row.d}'; window.__load('${row.d}')">
+          <td style="padding:10px">${row.d}</td>
+          <td style="padding:10px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px">${row.focus||'—'}</td>
+          <td style="padding:10px">${row.kpis?.rev ?? 0}</td>
+          <td style="padding:10px">${row.kpis?.vis ?? 0}</td>
+          <td style="padding:10px">${row.kpis?.subs ?? 0}</td>
+          <td style="padding:10px">${done}</td>
+          <td style="padding:10px">${open}</td>
+        </tr>`
+      }).join('')
+    }catch(e){ console.error(e) }
   }
-  function renderHistory(){
-    const q = (filterEl.value||'').toLowerCase()
-    const rows = lastHistory.filter(r => !q || (r.focus||'').toLowerCase().includes(q))
-    histBody.innerHTML = rows.map(row=>{
-      const done = Array.isArray(row.tasks)? row.tasks.filter(t=>t?.done).length : 0
-      const open = Array.isArray(row.tasks)? row.tasks.filter(t=>!t?.done && (t?.title||'').trim()).length : 0
-      return `<tr style="border-top:1px solid #232327;cursor:pointer"
-                onclick="document.querySelector('#date').value='${row.d}'; window.__load('${row.d}')">
-        <td style="padding:10px">${row.d}</td>
-        <td style="padding:10px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px">${row.focus||'—'}</td>
-        <td style="padding:10px">${row.kpis?.rev ?? 0}</td>
-        <td style="padding:10px">${row.kpis?.vis ?? 0}</td>
-        <td style="padding:10px">${row.kpis?.subs ?? 0}</td>
-        <td style="padding:10px">${done}</td>
-        <td style="padding:10px">${open}</td>
-      </tr>`
-    }).join('')
-  }
-  filterEl.addEventListener('input', renderHistory)
   window.__load = (d)=> loadDay(d)
 
-  // ======= Copy yesterday
-  async function copyFromYesterday(){
-    const today = new Date(dateEl.value || isoToday())
-    const y = new Date(today); y.setDate(y.getDate()-1)
-    const yIso = new Date(y.getTime()-y.getTimezoneOffset()*60000).toISOString().slice(0,10)
-    const { data } = await supabase.from('daily_entries').select('focus,notes,tasks,kpis').eq('d', yIso).maybeSingle()
-    if (!data){ showToast('No entry yesterday'); return }
-    // copy tasks (titles only, not done flags)
-    focusEl.value = data.focus || ''
-    notesEl.value = data.notes || ''
-    const tasks = Array.isArray(data.tasks)? data.tasks : [{},{},{}]
-    t.forEach((el,i)=> el.value = tasks[i]?.title || '')
-    td.forEach(c=> c.checked = false)
-    if (data.kpis){
-      revEl.value=data.kpis.rev??''; visEl.value=data.kpis.vis??''; subsEl.value=data.kpis.subs??''; folEl.value=data.kpis.fol??''
-    }
-    updateProgress()
-    triggerSave()
-    showToast('Copied yesterday')
-  }
-
-  // ======= CSV export (last 30 days)
-  function exportCsv(){
-    const rows = [['date','focus','notes','rev','visitors','subs','followers','t1','t1_done','t2','t2_done','t3','t3_done']]
-    lastHistory.forEach(r=>{
-      const k=r.kpis||{}, ts=(Array.isArray(r.tasks)?r.tasks:[{},{},{}])
-      rows.push([
-        r.d, (r.focus||'').replaceAll('\n',' '), '', // notes omitted from history row to keep CSV smaller
-        k.rev??0, k.vis??0, k.subs??0, k.fol??0,
-        ts[0]?.title||'', ts[0]?.done?1:0,
-        ts[1]?.title||'', ts[1]?.done?1:0,
-        ts[2]?.title||'', ts[2]?.done?1:0
-      ])
-    })
-    const csv = rows.map(r=>r.map(v=>{
-      const s=String(v??''); return /[,"\n]/.test(s)? `"${s.replaceAll('"','""')}"` : s
-    }).join(',')).join('\n')
-    const blob = new Blob([csv], {type:'text/csv'})
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `coreboard-history-${isoToday()}.csv`
-    document.body.appendChild(a); a.click(); a.remove()
-  }
-
-  // ======= Offline queue (localStorage)
-  const QKEY = 'coreboard-save-queue'
-  function queueSave(payload){
-    const q = JSON.parse(localStorage.getItem(QKEY)||'[]')
-    q.push(payload); localStorage.setItem(QKEY, JSON.stringify(q))
-  }
-  async function tryFlushQueue(){
-    if (!navigator.onLine) return
-    const q = JSON.parse(localStorage.getItem(QKEY)||'[]')
-    if (!q.length) return
-    for (const p of q){
-      try { await supabase.from('daily_entries').upsert(p, { onConflict:'user_id,d' }) } catch(e){ console.warn('flush failed',e); return }
-    }
-    localStorage.removeItem(QKEY)
-    showToast('Synced queued changes')
-    statusTxt.textContent='Saved ✅'
-    await loadHistory(false)
-  }
-
-  // ======= Boot
+  // ===== boot
   await loadDay(dateEl.value)
   await loadHistory()
-  await calcStreak()
 </script>
 </body>
+
 
